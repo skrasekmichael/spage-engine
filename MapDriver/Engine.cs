@@ -175,7 +175,7 @@ namespace MapDriver
                     double source_elev = map.GetTerrain(lx, ly).Elevation;
                     double max = 0;
 
-                    for (double i = 1; i < u.LineOfSight + max; i++)
+                    for (double i = 1; i < Math.Floor(u.LineOfSight + max); i++)
                     {
                         double px = Math.Cos(angle) * i;
                         double py = Math.Sin(angle) * i;
@@ -225,7 +225,7 @@ namespace MapDriver
                     double source_elev = map.GetTerrain(lx, ly).Elevation;
                     double max = 0;
 
-                    for (double i = 1; i < u.LineOfSight + max; i++)
+                    for (double i = 1; i < Math.Floor(u.LineOfSight + max); i++)
                     {
                         double px = Math.Cos(angle) * i;
                         double py = Math.Sin(angle) * i;
@@ -444,6 +444,7 @@ namespace MapDriver
 
         public List<Point> GetAttackRange(int sx, int sy, Unit unit = null, int rrange = 0)
         {
+            double s = 0.5;
             List<Point> range = new List<Point>();
             if (unit == null) unit = map.GetUnit(sx, sy);
 
@@ -461,7 +462,7 @@ namespace MapDriver
                 int lx = sx;
                 int ly = sy;
 
-                for (double i = 0; i < atack_range + max; i++)
+                for (double i = 0; i < Math.Floor(atack_range + max); i += 1)
                 {
                     double px = Math.Cos(angle) * (i + 1);
                     double py = Math.Sin(angle) * (i + 1);
@@ -475,13 +476,14 @@ namespace MapDriver
                         {
                             double nelev = map.GetTerrain(x, y).Elevation;
                             double elev = map.GetTerrain(lx, ly).Elevation;
+
                             if (nelev < elev)
                             {
-                                max = max + (reverse ? -0.5f : 0.5f);
+                                max = max + (reverse ? -s : s);
                                 if (nelev > source_elev) break;
                             }
-                            else if (nelev > elev && reverse)
-                                max = max - (reverse ? -0.5f : 0.5f);
+                            else if (nelev > elev /*&& reverse*/)
+                                max = max - (reverse ? -s : s);
                         }
 
                         Point key = new Point(x, y);
