@@ -143,11 +143,11 @@ namespace MapDriver
         protected override byte armor => 0;
         protected override byte piece_armor => 0;
         protected override ushort max_stamina => 80;
-        public override byte LineOfSight => 6;
+        public override byte LineOfSight => 5;
         public override ushort MaxHealth => 30;
-        public override byte StaminaPerAttack => 25;
+        public override byte StaminaPerAttack => 80/3;
         public override byte StaminaPerLevel => 15;
-        public override byte StaminaPerMove => 30;
+        public override byte StaminaPerMove => 80/5;
         public override bool IsRanged => true;
         protected override byte range => 4;
 
