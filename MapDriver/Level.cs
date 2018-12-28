@@ -13,7 +13,7 @@ namespace MapDriver
     public class Level
     {
         public Bitmap Map { get; set; }
-        public List<Unit> Pack { get; private set; }
+        public string PilotMap { get; set; } = null;
 
         private Dictionary<string, LevelMap> maps = new Dictionary<string, LevelMap>();
         private string[] indexes;
