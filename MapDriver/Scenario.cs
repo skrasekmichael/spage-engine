@@ -15,10 +15,10 @@ namespace MapDriver
         public List<Unit> StarterPack { get; set; } = null;
         public string Name { get; set; } = "";
 
-        public void Save(string path, string folder)
+        public void Save(string path, string source = null)
         {
-            string name = Path.GetFileNameWithoutExtension(path);
-            string source = $"{Path.GetTempPath()}\\spage\\{name}";
+            if (source == null)
+                source = $"{Path.GetTempPath()}\\spage\\{Path.GetFileNameWithoutExtension(path)}";
 
             using (FileStream stream = new FileStream($"{source}\\info.dat", FileMode.Create, FileAccess.Write))
             {
