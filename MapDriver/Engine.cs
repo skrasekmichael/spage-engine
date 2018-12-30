@@ -22,6 +22,7 @@ namespace MapDriver
         private PointF[,] points, minimap;
         private int size = 20;
         private double u, v;
+        private PointF center = new PointF(0, 0);
 
         public PointF Center { get; set; } = new PointF(0, 0);
 
@@ -31,42 +32,49 @@ namespace MapDriver
             get => _view;
             set
             {
-                int cx = (int)Math.Floor((double)map.Width / 2);
-                int cy = (int)Math.Floor((double)map.Height / 2);               
-
-                PointF center = parse(GetPoint(cx, cy));
-
-                PointF p1 = parse(GetPoint(0, 0));
-                PointF p2 = parse(GetPoint(map.Width, 0));
-                PointF p3 = parse(GetPoint(0, map.Height));
-                PointF p4 = parse(GetPoint(map.Width, map.Height));
-                PointF pos = (new PointF(center.X + value.X, center.Y - value.Y));
-
-                PointF[] area = new PointF[] { p1, p2, p3, p4 };
-
-                if (is_in_area(area, pos))
-                    _view = value;
-                else
+                if (value != _view)
                 {
-                    double angle = Vector.FromPoints(center, pos).Atan();
-                    double a1 = Vector.FromPoints(center, p1).Atan();
-                    double a2 = Vector.FromPoints(center, p2).Atan();
-                    double a3 = Vector.FromPoints(center, p3).Atan();
-                    double a4 = Vector.FromPoints(center, p4).Atan();
+                    if (value == new PointF(0, 0))
+                        _view = value;
+                    else
+                    {
+                        int cx = (int)Math.Floor((double)map.Width / 2);
+                        int cy = (int)Math.Floor((double)map.Height / 2);
 
-                    double dx = _view.X - value.X, dy = _view.Y - value.Y;
+                        PointF center = parse(GetPoint(cx, cy));
 
-                    if (angle > a4 && angle < a2)
-                        View = new PointF(_view.X - (float)Math.Abs(dy), _view.Y - (float)Math.Abs(dx));
-                    else if (angle > a2 && angle < a1)
-                        View = new PointF(_view.X - (float)Math.Abs(dy), _view.Y + (float)Math.Abs(dx));
-                    else if (angle > a1 && angle < a3)
-                        View = new PointF(_view.X + (float)Math.Abs(dy), _view.Y + (float)Math.Abs(dx));
-                    else if (angle > a3 && angle < a4)
-                        View = new PointF(_view.X + (float)Math.Abs(dy), _view.Y - (float)Math.Abs(dx));
+                        PointF p1 = parse(GetPoint(0, 0));
+                        PointF p2 = parse(GetPoint(map.Width, 0));
+                        PointF p3 = parse(GetPoint(0, map.Height));
+                        PointF p4 = parse(GetPoint(map.Width, map.Height));
+                        PointF pos = (new PointF(center.X + value.X, center.Y - value.Y));
+
+                        PointF[] area = new PointF[] { p1, p2, p3, p4 };
+
+                        if (is_in_area(area, pos))
+                            _view = value;
+                        else
+                        {
+                            double angle = Vector.FromPoints(center, pos).Atan();
+                            double a1 = Vector.FromPoints(center, p1).Atan();
+                            double a2 = Vector.FromPoints(center, p2).Atan();
+                            double a3 = Vector.FromPoints(center, p3).Atan();
+                            double a4 = Vector.FromPoints(center, p4).Atan();
+
+                            double dx = _view.X - value.X, dy = _view.Y - value.Y;
+
+                            if (angle > a4 && angle < a2)
+                                View = new PointF(_view.X - (float)Math.Abs(dy), _view.Y - (float)Math.Abs(dx));
+                            else if (angle > a2 && angle < a1)
+                                View = new PointF(_view.X - (float)Math.Abs(dy), _view.Y + (float)Math.Abs(dx));
+                            else if (angle > a1 && angle < a3)
+                                View = new PointF(_view.X + (float)Math.Abs(dy), _view.Y + (float)Math.Abs(dx));
+                            else if (angle > a3 && angle < a4)
+                                View = new PointF(_view.X + (float)Math.Abs(dy), _view.Y - (float)Math.Abs(dx));
+                        }
+                    }
+                    CalcPoints();
                 }
-
-                CalcPoints();
             }
         }
 
@@ -91,6 +99,9 @@ namespace MapDriver
         public double Width => Math.Cos(Math.PI / 6) * size;
         public double Height => Math.Sin(Math.PI / 6) * size;
 
+        public int ScreenWidth { get; set; }
+        public int ScreenHeight { get; set; }
+
         public Engine(Map map, int size, int Width, int Height)
         {
             this.map = map;
@@ -104,6 +115,7 @@ namespace MapDriver
             u = this.Height;
             v = this.Width;
 
+            center = new PointF((float)((map.Width - map.Height) * -v / 2), (float)((map.Width + map.Height) * -u / 2));
             CalcPoints();
         }
 
@@ -148,8 +160,8 @@ namespace MapDriver
             {
                 for (int j = 0; j < map.Height + 1; j++)
                 {
-                    double x = (i - j) * v + (float)((map.Width - map.Height) * -v / 2) + view.X + Center.X;
-                    double y = (i + j) * u + (float)((map.Width + map.Height) * -u / 2) + map.GetElevation(i, j) * size / 2.5 + view.Y + Center.Y;
+                    double x = (i - j) * v + center.X + view.X + Center.X;
+                    double y = (i + j) * u + center.Y + view.Y + Center.Y + map.GetElevation(i, j) * size / 2.5;
 
                     points[i, j] = new PointF((float)x, (float)y);
                     for (int q = 0; q < 2; q++)
@@ -444,25 +456,27 @@ namespace MapDriver
 
         public List<Point> GetAttackRange(int sx, int sy, Unit unit = null, int rrange = 0)
         {
-            double s = 0.5;
             List<Point> range = new List<Point>();
             if (unit == null) unit = map.GetUnit(sx, sy);
 
-            int atack_range = unit.Range;
+            int attack_range = unit.Range;
             bool reverse = rrange != 0;
 
             if (reverse)
-                atack_range = rrange;
+                attack_range = rrange;
 
-            for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 45)
+            double s = 0.5;
+            double source_elev = map.GetTerrain(sx, sy).Elevation;
+            double circuit = 2 * Math.PI * attack_range;
+
+            for (double angle = 0; angle < 2 * Math.PI; angle += (Math.PI * 2) / (2 * circuit))
             {
-                double source_elev = map.GetTerrain(sx, sy).Elevation;
                 double max = 0;
 
                 int lx = sx;
                 int ly = sy;
 
-                for (double i = 0; i < Math.Floor(atack_range + max); i += 1)
+                for (double i = 0; i < attack_range + max; i++)
                 {
                     double px = Math.Cos(angle) * (i + 1);
                     double py = Math.Sin(angle) * (i + 1);
@@ -470,20 +484,22 @@ namespace MapDriver
                     int x = sx + (int)Math.Round(px);
                     int y = sy + (int)Math.Round(py);
 
-                    if (map.TryCoordinates(x, y))
+                    if (map.TryCoordinates(x, y) && !(lx == x && ly == y))
                     {
-                        if (unit.IsRanged || rrange > 1)
+                        if (unit.IsRanged)
                         {
                             double nelev = map.GetTerrain(x, y).Elevation;
                             double elev = map.GetTerrain(lx, ly).Elevation;
 
                             if (nelev < elev)
                             {
-                                max = max + (reverse ? -s : s);
+                                max += (reverse) ? -s : s;
                                 if (nelev > source_elev) break;
                             }
-                            else if (nelev > elev /*&& reverse*/)
-                                max = max - (reverse ? -s : s);
+                            else if (elev <nelev)
+                            {
+                                max -= (reverse) ? -s : s;
+                            }
                         }
 
                         Point key = new Point(x, y);
@@ -493,10 +509,27 @@ namespace MapDriver
                         lx = x;
                         ly = y;
                     }
+
                 }
             }
 
             return range;
+        }
+
+        public void SetViewToPostion(int px, int py)
+        {
+            int x = map.Width / 2 - px;
+            int y = map.Height / 2 - py;
+
+            float nx = (float)((x - y) * v);
+            float ny = (float)((x + y) * u);
+
+            int w = ScreenWidth / 2;
+            int h = ScreenHeight / 2;
+
+            Rectangle rectangle = new Rectangle((int)(View.X - w), (int)(View.Y - h),  2 * w, 2 * h);
+            if (!rectangle.Contains((int)nx, (int)ny))
+                this.View = new PointF(nx, ny);
         }
 
         private bool is_in_area(PointF[] area, PointF point) => is_in_polygon(new PointF[] { area[0], area[1], area[3] }, point) || is_in_polygon(new PointF[] { area[0], area[2], area[3] }, point);

@@ -15,7 +15,7 @@ namespace MapDriver
     [Flags]
     public enum AIStrategy : byte
     {
-        Attack = 0, Defend = 1, Rush = 2, Static = 3, Scout = 4
+        Scout = 4, Static = 3, Defend = 2, Rush = 1, Attack = 0
     }
 
     [Serializable]
