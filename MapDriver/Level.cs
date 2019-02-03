@@ -15,6 +15,8 @@ namespace MapDriver
         public Bitmap Map { get; set; }
         public string PilotMap { get; set; } = null;
 
+        public List<LevelMap> Maps => maps.Values.ToList();
+
         private Dictionary<string, LevelMap> maps = new Dictionary<string, LevelMap>();
         private string[] indexes;
         private bool[] borders;
@@ -277,6 +279,8 @@ namespace MapDriver
         public bool IsLast { get; set; } = false;
         public List<string> Neighbors { get; internal set; } = new List<string>();
         public int Player { get; set; } = 2;
+        public int Rounds { get; set; } = 0;
+        public int Sources { get; set; } = 0;
         public bool IsVisibled { get; set; } = false;
         internal bool[] borders;
         public bool GetBorders(int index) => borders[index];

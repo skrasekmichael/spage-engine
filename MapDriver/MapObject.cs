@@ -9,7 +9,7 @@ namespace MapDriver
     [Flags]
     public enum DrawType
     {
-        Bottom, VerticalCenter
+        Bottom, VerticalCenter, Third
     }
 
     [Serializable]
@@ -23,6 +23,7 @@ namespace MapDriver
         public virtual string Texture => this.GetType().Name.ToLower();
 
         public virtual float Mobility { get; }
+        public virtual bool Transparent { get; } = false;
         public abstract bool Throughput { get; }
         public abstract string Color { get; }
 
@@ -68,5 +69,27 @@ namespace MapDriver
 
         public override bool Throughput => false;
         public override string Color => "#808080";
+    }
+
+    [Serializable]
+    public class StartPoint : MapObject
+    {
+        public override bool Transparent => true;
+        public override bool Throughput => true;
+        public override string Texture => "cross";
+        public override string Color => "#00FFFF";
+        public override DrawType DrawType => DrawType.Third;
+        public override float DrawScale => 0.5f;
+    }
+
+    [Serializable]
+    public class EndPoint : MapObject
+    {
+        public override bool Transparent => true;
+        public override bool Throughput => true;
+        public override string Texture => "cross";
+        public override string Color => "#3cbcd4";
+        public override DrawType DrawType => DrawType.Third;
+        public override float DrawScale => 0.5f;
     }
 }

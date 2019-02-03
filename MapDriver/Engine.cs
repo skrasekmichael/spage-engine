@@ -153,7 +153,7 @@ namespace MapDriver
             }
         }
 
-        public void CalcPoints()
+        public void CalcPoints(int phase = 1)
         {
             PointF view = View;
             for (int i = 0; i < map.Width + 1; i++)
@@ -172,48 +172,51 @@ namespace MapDriver
                 }
             }
 
-            Dictionary<Point, Unit> units = map.Units;
-            foreach (KeyValuePair<Point, Unit> kvp in units)
+            if (phase == 1)
             {
-                Point p = kvp.Key;
-                Unit u = kvp.Value;
-
-                visibilities[kvp.Value.Player - 1, p.X, p.Y] = Visibility.Visible;
-
-                for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 90)
+                Dictionary<Point, Unit> units = map.Units;
+                foreach (KeyValuePair<Point, Unit> kvp in units)
                 {
-                    int lx = p.X;
-                    int ly = p.Y;
-                    double source_elev = map.GetTerrain(lx, ly).Elevation;
-                    double max = 0;
+                    Point p = kvp.Key;
+                    Unit u = kvp.Value;
 
-                    for (double i = 1; i < Math.Floor(u.LineOfSight + max); i++)
+                    visibilities[kvp.Value.Player - 1, p.X, p.Y] = Visibility.Visible;
+
+                    for (double angle = 0; angle < 2 * Math.PI; angle += Math.PI / 90)
                     {
-                        double px = Math.Cos(angle) * i;
-                        double py = Math.Sin(angle) * i;
+                        int lx = p.X;
+                        int ly = p.Y;
+                        double source_elev = map.GetTerrain(lx, ly).Elevation;
+                        double max = 0;
 
-                        int x = p.X + (int)Math.Round(px);
-                        int y = p.Y + (int)Math.Round(py);
-
-                        if (map.TryCoordinates(x, y))
+                        for (double i = 1; i < Math.Floor(u.LineOfSight + max); i++)
                         {
-                            double nelev = map.GetTerrain(x, y).Elevation;
-                            double elev = map.GetTerrain(lx, ly).Elevation;
-                            if (nelev < elev)
-                            {
-                                max += 0.5;
-                                if (nelev > source_elev) break;
-                            }
-                            else if (nelev > elev)
-                                max -= 0.5;
+                            double px = Math.Cos(angle) * i;
+                            double py = Math.Sin(angle) * i;
 
-                            if (visibilities[kvp.Value.Player - 1, x, y] != Visibility.Visible)
+                            int x = p.X + (int)Math.Round(px);
+                            int y = p.Y + (int)Math.Round(py);
+
+                            if (map.TryCoordinates(x, y))
+                            {
+                                double nelev = map.GetTerrain(x, y).Elevation;
+                                double elev = map.GetTerrain(lx, ly).Elevation;
+                                if (nelev < elev)
+                                {
+                                    max += 0.5;
+                                    if (nelev > source_elev) break;
+                                }
+                                else if (nelev > elev)
+                                    max -= 0.5;
+
                                 visibilities[kvp.Value.Player - 1, x, y] = Visibility.Visible;
 
-                            if (map.GetMapObject(x, y) != null) break;
+                                MapObject obj = map.GetMapObject(x, y);
+                                if (obj != null && obj.Transparent == false) break;
 
-                            lx = x;
-                            ly = y;
+                                lx = x;
+                                ly = y;
+                            }
                         }
                     }
                 }
@@ -261,7 +264,8 @@ namespace MapDriver
                             if (!los.Contains(key))
                                 los.Add(key);
 
-                            if (map.GetMapObject(x, y) != null) break;
+                            MapObject obj = map.GetMapObject(x, y);
+                            if (obj != null && obj.Transparent == false) break;
 
                             lx = x;
                             ly = y;
@@ -276,6 +280,11 @@ namespace MapDriver
         public Visibility GetVisibility(int x, int y, int player = 0)
         {
             return visibilities[player, x, y];
+        }
+
+        public void SetVisibility(int x, int y, Visibility data)
+        {
+            visibilities[0, x, y] = data;
         }
 
         public PointF GetCenter(int x, int y)
@@ -496,7 +505,7 @@ namespace MapDriver
                                 max += (reverse) ? -s : s;
                                 if (nelev > source_elev) break;
                             }
-                            else if (elev <nelev)
+                            else if (elev < nelev)
                             {
                                 max -= (reverse) ? -s : s;
                             }

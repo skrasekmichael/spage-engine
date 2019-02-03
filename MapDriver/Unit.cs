@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace MapDriver
 {
@@ -107,6 +108,21 @@ namespace MapDriver
             float[] percent = { 0, 0.15f, 0.30f, 0.45f, 0.60f, 0.80f, 1 };
             for (int i = 0; i < 7; i++)
                 ExperiencePerLevel[i] = (ushort)((double)percent[i] * MaxExperience);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || obj.GetType() != this.GetType())
+                return false;
+
+            PropertyInfo[] props = obj.GetType().GetProperties();
+            foreach (PropertyInfo info in props)
+            {
+                if (this.GetType().GetProperty(info.Name) != info)
+                    return false;
+            }
+
+            return true;
         }
     }
 

@@ -64,15 +64,23 @@ namespace MapDriver
             switch (type)
             {
                 case QuestType.KillAllUnits:
-                    if (map.Units.Values.ToList().Where(u => u.Player != 1).ToList().Count == 0)
+                    if (map.Units.Values.ToList().Where(u => u.Player != 1).Count() == 0)
                         Done = true;
                     break;
                 case QuestType.KillUnit:
-                    if (map.Units.Values.ToList().Where(u => u == specific_unit).ToList().Count == 0)
+                    if (map.Units.Values.ToList().Where(u => u == specific_unit).Count() == 0)
                         Done = true;
                     break;
                 case QuestType.SerchMap:
                     if (engine.GetVisibility(position.X, position.Y) != Visibility.Gone)
+                        Done = true;
+                    break;
+                case QuestType.SaveUnit:
+                    if (map.Units.Where(kvp => kvp.Value == specific_unit && map.GetMapObject(kvp.Key.X, kvp.Key.Y)?.GetType() == typeof(StartPoint)).Count() == 1)
+                        Done = true;
+                    break;
+                case QuestType.TransportWagons:
+                    if (map.Units.Where(kvp => kvp.Value == specific_unit && map.GetMapObject(kvp.Key.X, kvp.Key.Y)?.GetType() == typeof(EndPoint)).Count() == 1)
                         Done = true;
                     break;
             }

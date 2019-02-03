@@ -63,8 +63,6 @@ namespace MapDriver
 
         public void SetUnit(int x, int y, Unit unit)
         {
-            /*if (TryCoordinates(x, y))
-            {*/
                 Point key = new Point(x, y);
                 if (Units.ContainsKey(key))
                 {
@@ -77,40 +75,20 @@ namespace MapDriver
                     if (unit != null)
                         Units.Add(key, unit);
                 }
-            /*}
-            else
-                throw new Exception($"Location [{x}, {y}] is not in map area.");*/
         }
 
         public Unit GetUnit(int x, int y)
         {
-            /*if (TryCoordinates(x, y))
-            {*/
                 Point key = new Point(x, y);
                 if (Units.ContainsKey(key))
                     return Units[key];
                 else
                     return null;
-            /*}
-            else
-                throw new Exception($"Location [{x}, {y}] is not in map area.");*/
         }
 
-        public Terrain GetTerrain(int x, int y)
-        {
-            //if (TryCoordinates(x, y))
-                return terrain[x, y];
-            /*else
-                return null;*/
-        }
+        public Terrain GetTerrain(int x, int y) => terrain[x, y];
 
-        public MapObject GetMapObject(int x, int y)
-        {
-            //if (TryCoordinates(x, y))
-                return objs[x, y];
-            /*else
-                throw new Exception($"Location [{x}, {y}] is not in map area.");*/
-        }
+        public MapObject GetMapObject(int x, int y) => objs[x, y];
 
         public int GetElevation(int x, int y)
         {
