@@ -16,36 +16,50 @@ namespace MapDriver
     [Flags]
     public enum AIStrategy : byte
     {
-        Scout = 4, Static = 3, Defend = 2, Rush = 1, Attack = 0
+        Scout = 4,
+        Static = 3,
+        Defend = 2,
+        Rush = 1,
+        Attack = 0
     }
 
     [Serializable]
     public abstract class Unit
     {
-        public byte[] UpgradeBonuses = new byte[4];
+        internal const int ATTACK = 0;
+        internal const int ARMOR = 1;
+        internal const int PIECEARMOR = 2;
+        internal const int RANGE = 3;
+        internal const int PERMOVE = 4;
+
+        public Dictionary<ResearchType, Research> Upgrades { get; } = new Dictionary<ResearchType, Research>();
+        internal byte[] UpgradeBonuses = new byte[5];
+
         public byte Player { get; private set; }
         public virtual byte Direction { get; set; } = 4;
         public abstract UnitType Type { get; }
 
         public abstract ushort MaxExperience { get; }
         public abstract byte StaminaPerAttack { get; }
-        public abstract byte StaminaPerMove { get; }
+
+        protected abstract byte per_move { get; }
+        public byte StaminaPerMove => (byte)(per_move + UpgradeBonuses[PERMOVE]);
         public abstract byte StaminaPerLevel { get; }
 
         protected abstract byte attack { get; }
-        public byte Attack => (byte)(UpgradeBonuses[0] + attack + AttackBonus);
+        public byte Attack => (byte)(UpgradeBonuses[ATTACK] + attack + AttackBonus);
 
         protected abstract byte armor { get; }
-        public byte Armor => (byte)(UpgradeBonuses[1] + armor + ArmorBonus);
+        public byte Armor => (byte)(UpgradeBonuses[ARMOR] + armor + ArmorBonus);
 
         protected abstract byte piece_armor { get; }
-        public byte PieceArmor => (byte)(UpgradeBonuses[2] + piece_armor + ArmorBonus);
+        public byte PieceArmor => (byte)(UpgradeBonuses[PIECEARMOR] + piece_armor + ArmorBonus);
 
         protected abstract ushort max_stamina { get; }
         public ushort MaxStamina => (ushort)(max_stamina + StaminaBonus);
 
         protected virtual byte range { get; } = 1;
-        public byte Range => (byte)(range + UpgradeBonuses[3]);
+        public byte Range => (byte)(range + UpgradeBonuses[RANGE]);
         public virtual byte MinRange { get; } = 0;
 
         public abstract byte LineOfSight { get; }
@@ -124,6 +138,8 @@ namespace MapDriver
 
             return true;
         }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     [Serializable]
@@ -135,11 +151,11 @@ namespace MapDriver
         protected override byte armor => 4;
         protected override byte piece_armor => 4;
         protected override ushort max_stamina => 155;
+        protected override byte per_move => 30;
         public override byte LineOfSight => 5;
         public override ushort MaxHealth => 180;
         public override byte StaminaPerAttack => 50;
         public override byte StaminaPerLevel => 25;
-        public override byte StaminaPerMove => 30;
         public override bool IsRanged => false;
 
         public override ushort MaxExperience => 5000;
@@ -159,11 +175,11 @@ namespace MapDriver
         protected override byte armor => 0;
         protected override byte piece_armor => 0;
         protected override ushort max_stamina => 80;
+        protected override byte per_move => 80 / 5;
         public override byte LineOfSight => 5;
         public override ushort MaxHealth => 30;
         public override byte StaminaPerAttack => 80/3;
         public override byte StaminaPerLevel => 15;
-        public override byte StaminaPerMove => 80/5;
         public override bool IsRanged => true;
         protected override byte range => 4;
 
