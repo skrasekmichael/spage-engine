@@ -32,17 +32,17 @@ namespace MapDriver
     [Serializable]
     public abstract class Unit
     {
-        internal const int ATTACK = 0;
-        internal const int ARMOR = 1;
-        internal const int PIECEARMOR = 2;
-        internal const int RANGE = 3;
-        internal const int PERMOVE = 4;
+        public const int ATTACK = 0;
+        public const int ARMOR = 1;
+        public const int PIECEARMOR = 2;
+        public const int RANGE = 3;
+        public const int PERMOVE = 4;
 
         public abstract List<Type> Researches { get; }
         public Dictionary<UpgradeType, UnitUpgrade> Upgrades { get; } = new Dictionary<UpgradeType, UnitUpgrade>();
         public UnitStatus UnitStatus { get; set; } = UnitStatus.InBarracks;
         public int Rounds { get; set; } = 0;
-        internal byte[] UpgradeBonuses = new byte[5];
+        public byte[] UpgradeBonuses = new byte[5];
 
         public byte Player { get; private set; }
         public virtual byte Direction { get; set; } = 4;
