@@ -15,7 +15,7 @@ namespace MapDriver
 
     public class Engine
     {
-        private int w, h;
+        private int w, h, phase = 1;
         private PointF parse(PointF val) => new PointF(val.X - w / 2, h / 2 - val.Y);
 
         private Map map;
@@ -73,7 +73,7 @@ namespace MapDriver
                                 View = new PointF(_view.X + (float)Math.Abs(dy), _view.Y - (float)Math.Abs(dx));
                         }
                     }
-                    CalcPoints();
+                    CalcPoints(phase);
                 }
             }
         }
@@ -155,6 +155,8 @@ namespace MapDriver
 
         public void CalcPoints(int phase = 1)
         {
+            this.phase = phase;
+
             PointF view = View;
             for (int i = 0; i < map.Width + 1; i++)
             {
@@ -164,10 +166,13 @@ namespace MapDriver
                     double y = (i + j) * u + center.Y + view.Y + Center.Y + map.GetElevation(i, j) * size / 2.5;
 
                     points[i, j] = new PointF((float)x, (float)y);
-                    for (int q = 0; q < 2; q++)
+                    if (phase != 1)
                     {
-                        if (j != map.Height && i != map.Width && visibilities[q, i, j] == MapDriver.Visibility.Visible)
-                            visibilities[q, i, j] = MapDriver.Visibility.Sighted;
+                        for (int q = 0; q < 2; q++)
+                        {
+                            if (j != map.Height && i != map.Width && visibilities[q, i, j] == MapDriver.Visibility.Visible)
+                                visibilities[q, i, j] = MapDriver.Visibility.Sighted;
+                        }
                     }
                 }
             }
