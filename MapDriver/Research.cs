@@ -7,13 +7,31 @@ using System.Threading.Tasks;
 namespace MapDriver
 {
     [Flags]
-    public enum ResearchType : byte
+    public enum UpgradeType : byte
     {
         Weapon, Armor
     }
 
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class ResearchAttribute : Attribute
+    {
+        public bool IsResearchable { get; private set; }
+
+        public ResearchAttribute(bool able)
+        {
+            IsResearchable = able;
+        }
+    }
+
     [Serializable]
     public abstract class Research
+    {
+        public abstract List<Type> Researchs { get; }
+        public abstract int ResearchDifficulty { get; }
+    }
+
+    [Serializable]
+    public abstract class UnitUpgrade : Research
     {
         public virtual byte Attack { get; } = 0;
         public virtual byte Armor { get; } = 0;
@@ -21,11 +39,9 @@ namespace MapDriver
         public virtual byte Range { get; } = 0;
         public virtual sbyte Mobility { get; } = 0;
 
-        public virtual List<Type> Parents { get; }
+        public abstract int Price { get; }
         public abstract List<UnitType> Group { get; }
-        public abstract ResearchType Type { get; }
-
-        private byte[] upgrades;
+        public abstract UpgradeType Type { get; }
 
         public void Apply(Unit unit)
         {
@@ -34,13 +50,7 @@ namespace MapDriver
                 if (unit.Upgrades.ContainsKey(Type))
                     unit.Upgrades[Type].deapply(unit);
 
-                upgrades = (byte[])unit.UpgradeBonuses.Clone();
-
-                unit.UpgradeBonuses[Unit.PIECEARMOR] += PieceArmor;
-                unit.UpgradeBonuses[Unit.RANGE] += Range;
-                unit.UpgradeBonuses[Unit.ARMOR] += Armor;
-                unit.UpgradeBonuses[Unit.ATTACK] += Attack;
-                unit.UpgradeBonuses[Unit.PERMOVE] += (byte)(unit.MaxStamina / (Math.Floor((double)unit.MaxStamina / unit.StaminaPerMove) + Mobility));
+                apply(unit, 1);
 
                 if (unit.Upgrades.ContainsKey(Type))
                     unit.Upgrades[Type] = this;
@@ -49,36 +59,100 @@ namespace MapDriver
             }
         }
 
-        private void deapply(Unit unit)
+        private void deapply(Unit unit) => apply(unit, -1);
+
+        private void apply(Unit unit, int k)
         {
-            unit.UpgradeBonuses = (byte[])upgrades.Clone();
+            unit.UpgradeBonuses[Unit.PIECEARMOR] += (byte)(k * PieceArmor);
+            unit.UpgradeBonuses[Unit.RANGE] += (byte)(k * Range);
+            unit.UpgradeBonuses[Unit.ARMOR] += (byte)(k * Armor);
+            unit.UpgradeBonuses[Unit.ATTACK] += (byte)(k * Attack);
+            unit.UpgradeBonuses[Unit.PERMOVE] += (byte)(k * (unit.MaxStamina / (Math.Floor((double)unit.MaxStamina / unit.StaminaPerMove) + Mobility)));
         }
     }
 
     [Serializable]
-    public class BronzeSword : Research
+    [Research(false)]
+    public abstract class Technology : Research
     {
-        public override List<UnitType> Group => new List<UnitType>(new[] { UnitType.Cavalery, UnitType.Infantry });
+        public abstract int ResearchPrice { get; }
+    }
+
+    [Serializable]
+    [Research(false)]
+    public abstract class Age : Technology
+    {
+        public override int ResearchDifficulty => 0;
+        public override int ResearchPrice => 0;
+    }
+
+    #region UnitUpgrade
+
+    [Serializable]
+    public class BronzeSword : UnitUpgrade
+    {
+        public override List<Type> Researchs => new List<Type> { typeof(StartAge) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Attack => 1;
-        public override ResearchType Type => ResearchType.Weapon;
+        public override UpgradeType Type => UpgradeType.Weapon;
+        public override int ResearchDifficulty => 12;
+        public override int Price => 30;
     }
 
     [Serializable]
-    public class IronSword : Research
+    public class IronSword : UnitUpgrade
     {
-        public override List<Type> Parents => new List<Type>(new[] { typeof(BronzeSword) });
-        public override List<UnitType> Group => new List<UnitType>(new[] { UnitType.Cavalery, UnitType.Infantry });
+        public override List<Type> Researchs => new List<Type> { typeof(BronzeSword) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Attack => 2;
-        public override ResearchType Type => ResearchType.Weapon;
+        public override UpgradeType Type => UpgradeType.Weapon;
+        public override int ResearchDifficulty => 25;
+        public override int Price => 55;
     }
 
     [Serializable]
-    public class PlateArmor : Research
+    public class PlateArmor : UnitUpgrade
     {
-        public override List<UnitType> Group => new List<UnitType>(new[] { UnitType.Cavalery, UnitType.Infantry });
+        public override List<Type> Researchs => new List<Type> { typeof(CastleAge) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Armor => 3;
         public override byte PieceArmor => 2;
         public override sbyte Mobility => -2;
-        public override ResearchType Type => ResearchType.Armor;
+        public override UpgradeType Type => UpgradeType.Armor;
+        public override int ResearchDifficulty => 33;
+        public override int Price => 80;
     }
+
+    #endregion
+    #region Age
+
+    [Serializable]
+    [Research(false)]
+    public class StartAge : Age
+    {
+        public override List<Type> Researchs => new List<Type>();
+    }
+
+    [Serializable]
+    [Research(false)]
+    public class FedualAge : Age
+    {
+        public override List<Type> Researchs => new List<Type> { typeof(StartAge) };
+    }
+
+    [Serializable]
+    [Research(false)]
+    public class CastleAge : Age
+    {
+        public override List<Type> Researchs => new List<Type> { typeof(FedualAge) };
+    }
+
+    [Serializable]
+    [Research(false)]
+    public class ImperialAge : Age
+    {
+        public override List<Type> Researchs => new List<Type> { typeof(CastleAge) };
+    }
+
+    #endregion
 }

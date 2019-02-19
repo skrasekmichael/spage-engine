@@ -23,6 +23,12 @@ namespace MapDriver
         Attack = 0
     }
 
+    [Flags]
+    public enum UnitStatus : byte
+    {
+        Training, Upgrading, OnWay, InBarracks
+    }
+
     [Serializable]
     public abstract class Unit
     {
@@ -32,12 +38,17 @@ namespace MapDriver
         internal const int RANGE = 3;
         internal const int PERMOVE = 4;
 
-        public Dictionary<ResearchType, Research> Upgrades { get; } = new Dictionary<ResearchType, Research>();
+        public abstract List<Type> Researches { get; }
+        public Dictionary<UpgradeType, UnitUpgrade> Upgrades { get; } = new Dictionary<UpgradeType, UnitUpgrade>();
+        public UnitStatus UnitStatus { get; set; } = UnitStatus.InBarracks;
+        public int Rounds { get; set; } = 0;
         internal byte[] UpgradeBonuses = new byte[5];
 
         public byte Player { get; private set; }
         public virtual byte Direction { get; set; } = 4;
         public abstract UnitType Type { get; }
+        public abstract int Price { get; }
+        public abstract byte Training { get; }
 
         public abstract ushort MaxExperience { get; }
         public abstract byte StaminaPerAttack { get; }
@@ -146,7 +157,8 @@ namespace MapDriver
     public class Paladin : Unit
     {
         public override UnitType Type => UnitType.Cavalery;
-
+        public override List<Type> Researches => new List<Type> { typeof(ImperialAge), typeof(PlateArmor) };
+        public override byte Training => 4;
         protected override byte attack => 14;
         protected override byte armor => 4;
         protected override byte piece_armor => 4;
@@ -157,7 +169,7 @@ namespace MapDriver
         public override byte StaminaPerAttack => 50;
         public override byte StaminaPerLevel => 25;
         public override bool IsRanged => false;
-
+        public override int Price => 200;
         public override ushort MaxExperience => 5000;
 
         public Paladin(byte player) : base(player)
@@ -170,7 +182,8 @@ namespace MapDriver
     public class Archer : Unit
     {
         public override UnitType Type => UnitType.Archers;
-
+        public override List<Type> Researches => new List<Type> { typeof(StartAge) };
+        public override byte Training => 2;
         protected override byte attack => 6;
         protected override byte armor => 0;
         protected override byte piece_armor => 0;
@@ -182,7 +195,7 @@ namespace MapDriver
         public override byte StaminaPerLevel => 15;
         public override bool IsRanged => true;
         protected override byte range => 4;
-
+        public override int Price => 40;
         public override ushort MaxExperience => 3100;
 
         public Archer(byte player) : base(player)
