@@ -26,13 +26,16 @@ namespace MapDriver
     [Serializable]
     public abstract class Research
     {
-        public abstract List<Type> Researchs { get; }
+        public abstract List<Type> Researches { get; }
         public abstract int ResearchDifficulty { get; }
+        public int Done { get; set; }
     }
 
     [Serializable]
     public abstract class UnitUpgrade : Research
     {
+        public override int ResearchDifficulty => 0;
+
         public virtual byte Attack { get; } = 0;
         public virtual byte Armor { get; } = 0;
         public virtual byte PieceArmor { get; } = 0;
@@ -91,35 +94,42 @@ namespace MapDriver
     [Serializable]
     public class BronzeSword : UnitUpgrade
     {
-        public override List<Type> Researchs => new List<Type> { typeof(StartAge) };
+        public override List<Type> Researches => new List<Type> { typeof(IronProcessing) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Attack => 1;
         public override UpgradeType Type => UpgradeType.Weapon;
-        public override int ResearchDifficulty => 12;
         public override int Price => 30;
     }
 
     [Serializable]
     public class IronSword : UnitUpgrade
     {
-        public override List<Type> Researchs => new List<Type> { typeof(BronzeSword) };
+        public override List<Type> Researches => new List<Type> { typeof(IronCasting) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Attack => 2;
         public override UpgradeType Type => UpgradeType.Weapon;
-        public override int ResearchDifficulty => 25;
         public override int Price => 55;
+    }
+
+    [Serializable]
+    public class SteelSword : UnitUpgrade
+    {
+        public override List<Type> Researches => new List<Type> { typeof(IronHardening), typeof(ImperialAge) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
+        public override byte Attack => 3;
+        public override UpgradeType Type => UpgradeType.Weapon;
+        public override int Price => 75;
     }
 
     [Serializable]
     public class PlateArmor : UnitUpgrade
     {
-        public override List<Type> Researchs => new List<Type> { typeof(CastleAge) };
+        public override List<Type> Researches => new List<Type> { typeof(IronCasting), typeof(CastleAge) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Armor => 3;
         public override byte PieceArmor => 2;
         public override sbyte Mobility => -2;
         public override UpgradeType Type => UpgradeType.Armor;
-        public override int ResearchDifficulty => 33;
         public override int Price => 80;
     }
 
@@ -130,28 +140,49 @@ namespace MapDriver
     [Research(false)]
     public class StartAge : Age
     {
-        public override List<Type> Researchs => new List<Type>();
+        public override List<Type> Researches => new List<Type>();
     }
 
     [Serializable]
     [Research(false)]
     public class FedualAge : Age
     {
-        public override List<Type> Researchs => new List<Type> { typeof(StartAge) };
+        public override List<Type> Researches => new List<Type> { typeof(StartAge) };
     }
 
     [Serializable]
     [Research(false)]
     public class CastleAge : Age
     {
-        public override List<Type> Researchs => new List<Type> { typeof(FedualAge) };
+        public override List<Type> Researches => new List<Type> { typeof(FedualAge) };
     }
 
     [Serializable]
     [Research(false)]
     public class ImperialAge : Age
     {
-        public override List<Type> Researchs => new List<Type> { typeof(CastleAge) };
+        public override List<Type> Researches => new List<Type> { typeof(CastleAge) };
+    }
+
+    #endregion
+    #region Researches
+
+    public class IronProcessing : Research
+    {
+        public override List<Type> Researches => new List<Type>() { typeof(StartAge) };
+        public override int ResearchDifficulty => 10;
+    }
+
+    public class IronCasting : Research
+    {
+        public override List<Type> Researches => new List<Type>() { typeof(IronProcessing), typeof(FedualAge) };
+        public override int ResearchDifficulty => 13;
+    }
+
+    public class IronHardening : Research
+    {
+        public override List<Type> Researches => new List<Type>() { typeof(IronCasting), typeof(CastleAge) };
+        public override int ResearchDifficulty => 17;
     }
 
     #endregion

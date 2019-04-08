@@ -47,10 +47,7 @@ namespace MapDriver
             type = (byte)gen.Next(Max);
         }
 
-        public override string Texture
-        {
-            get => this.GetType().Name.ToLower() + type.ToString();
-        }
+        public override string Texture => this.GetType().Name.ToLower() + type.ToString();
 
         public override float Mobility => 1.7f;
         public override bool Throughput => true;
@@ -61,12 +58,6 @@ namespace MapDriver
     public class Rock : MapObject
     {
         public override float DrawScale => 0.6f;
-
-        public override string Texture
-        {
-            get => this.GetType().Name.ToLower();
-        }
-
         public override bool Throughput => false;
         public override string Color => "#808080";
     }

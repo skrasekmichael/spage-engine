@@ -27,18 +27,34 @@ namespace MapDriver
             borders = new bool[Map.Width * Map.Height];
             maps.ToList().ForEach(kvp => kvp.Value.borders = new bool[Map.Width * Map.Height]);
 
+            List<List<Point>> center = new List<List<Point>>();
+            for (int i = 0; i < Maps.Count; i++)
+                center.Add(new List<Point>());
+
             for (int x = 0; x < Map.Width; x++)
             {
                 for (int y = 0; y < Map.Height; y++)
                 {
-                    string index = null;
+                    string key = null;
+                    int index = 0;
                     foreach (KeyValuePair<string, LevelMap> kvp in maps)
                     {
                         if (map.GetPixel(x, y) == kvp.Value.KeyColor)
-                            index = kvp.Key;
+                        {
+                            center[index].Add(new Point(x, y));
+                            key = kvp.Key;
+                        }
+                        index++;
                     }
-                    indexes[y * Map.Width + x] = index;
+                    indexes[y * Map.Width + x] = key;
                 }
+            }
+
+            for (int i = 0; i < Maps.Count; i++)
+            {
+                Point c = new Point(0, 0);
+                center[i].ForEach(p => { c.X += p.X; c.Y += p.Y; });
+                Maps[i].Center = new Point(c.X / center[i].Count, c.Y / center[i].Count);
             }
 
             set_borders(width);
@@ -246,6 +262,16 @@ namespace MapDriver
                 else
                     return maps[index];
             }
+            set
+            {
+                if (index != null)
+                {
+                    if (maps.ContainsKey(index))
+                        maps[index] = value;
+                    else
+                        AddMap(index, value);
+                }
+            }
         }
 
         public void SetNeighbors(LevelMap map, List<string> neighbors)
@@ -284,5 +310,6 @@ namespace MapDriver
         public bool IsVisibled { get; set; } = false;
         internal bool[] borders;
         public bool GetBorders(int index) => borders[index];
+        public Point Center { get; set; } = new Point(0, 0);
     }
 }

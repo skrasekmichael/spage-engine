@@ -26,7 +26,7 @@ namespace MapDriver
     [Flags]
     public enum UnitStatus : byte
     {
-        Training, Upgrading, OnWay, InBarracks
+        Training, Upgrading, OnWay, InBarracks, Healing
     }
 
     [Serializable]
@@ -151,13 +151,14 @@ namespace MapDriver
         }
 
         public override int GetHashCode() => base.GetHashCode();
+        public override string ToString() => this.GetType().Name;
     }
 
     [Serializable]
     public class Paladin : Unit
     {
         public override UnitType Type => UnitType.Cavalery;
-        public override List<Type> Researches => new List<Type> { typeof(ImperialAge), typeof(PlateArmor) };
+        public override List<Type> Researches => new List<Type> { typeof(ImperialAge), typeof(PlateArmor), typeof(IronSword) };
         public override byte Training => 4;
         protected override byte attack => 14;
         protected override byte armor => 4;
@@ -170,12 +171,53 @@ namespace MapDriver
         public override byte StaminaPerLevel => 25;
         public override bool IsRanged => false;
         public override int Price => 200;
+        public override ushort MaxExperience => 8000;
+
+        public Paladin(byte player) : base(player) { }
+    }
+
+    [Serializable]
+    public class Knight : Unit
+    {
+        public override UnitType Type => UnitType.Cavalery;
+        public override List<Type> Researches => new List<Type> { typeof(CastleAge), typeof(IronSword) };
+        public override byte Training => 3;
+        protected override byte attack => 10;
+        protected override byte armor => 2;
+        protected override byte piece_armor => 2;
+        protected override ushort max_stamina => 125;
+        protected override byte per_move => 20;
+        public override byte LineOfSight => 5;
+        public override ushort MaxHealth => 120;
+        public override byte StaminaPerAttack => 40;
+        public override byte StaminaPerLevel => 20;
+        public override bool IsRanged => false;
+        public override int Price => 120;
         public override ushort MaxExperience => 5000;
 
-        public Paladin(byte player) : base(player)
-        {
-            
-        }
+        public Knight(byte player) : base(player) { }
+    }
+
+    [Serializable]
+    public class Scout : Unit
+    {
+        public override UnitType Type => UnitType.Cavalery;
+        public override List<Type> Researches => new List<Type> { typeof(StartAge) };
+        public override byte Training => 2;
+        protected override byte attack => 4;
+        protected override byte armor => 0;
+        protected override byte piece_armor => 1;
+        protected override ushort max_stamina => 200;
+        protected override byte per_move => 25;
+        public override byte LineOfSight => 9;
+        public override ushort MaxHealth => 95;
+        public override byte StaminaPerAttack => 60;
+        public override byte StaminaPerLevel => 20;
+        public override bool IsRanged => false;
+        public override int Price => 60;
+        public override ushort MaxExperience => 3500;
+
+        public Scout(byte player) : base(player) { }
     }
 
     [Serializable]
@@ -198,9 +240,6 @@ namespace MapDriver
         public override int Price => 40;
         public override ushort MaxExperience => 3100;
 
-        public Archer(byte player) : base(player)
-        {
-
-        }
+        public Archer(byte player) : base(player) { }
     }
 }
