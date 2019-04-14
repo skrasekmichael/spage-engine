@@ -9,7 +9,8 @@ namespace MapDriver
     [Flags]
     public enum UpgradeType : byte
     {
-        Weapon, Armor
+        Weapon = 0,
+        Armor = 1
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -29,12 +30,13 @@ namespace MapDriver
         public abstract List<Type> Researches { get; }
         public abstract int ResearchDifficulty { get; }
         public int Done { get; set; }
+        public override string ToString() => this.GetType().Name;
     }
 
     [Serializable]
     public abstract class UnitUpgrade : Research
     {
-        public override int ResearchDifficulty => 0;
+        public override int ResearchDifficulty => 1;
 
         public virtual byte Attack { get; } = 0;
         public virtual byte Armor { get; } = 0;
@@ -48,29 +50,26 @@ namespace MapDriver
 
         public void Apply(Unit unit)
         {
-            if (Group.Contains(unit.Type))
-            {
-                if (unit.Upgrades.ContainsKey(Type))
-                    unit.Upgrades[Type].deapply(unit);
+            if (unit.Upgrades.ContainsKey(Type))
+                unit.Upgrades[Type].deapply(unit);
 
-                apply(unit, 1);
+            apply(unit, 1);
 
-                if (unit.Upgrades.ContainsKey(Type))
-                    unit.Upgrades[Type] = this;
-                else
-                    unit.Upgrades.Add(Type, this);
-            }
+            if (unit.Upgrades.ContainsKey(Type))
+                unit.Upgrades[Type] = this;
+            else
+                unit.Upgrades.Add(Type, this);
         }
 
         private void deapply(Unit unit) => apply(unit, -1);
 
         private void apply(Unit unit, int k)
         {
-            unit.UpgradeBonuses[Unit.PIECEARMOR] += (byte)(k * PieceArmor);
-            unit.UpgradeBonuses[Unit.RANGE] += (byte)(k * Range);
-            unit.UpgradeBonuses[Unit.ARMOR] += (byte)(k * Armor);
-            unit.UpgradeBonuses[Unit.ATTACK] += (byte)(k * Attack);
-            unit.UpgradeBonuses[Unit.PERMOVE] += (byte)(k * (unit.MaxStamina / (Math.Floor((double)unit.MaxStamina / unit.StaminaPerMove) + Mobility)));
+            unit.UpgradeBonuses[Unit.PIECEARMOR] += (sbyte)(k * PieceArmor);
+            unit.UpgradeBonuses[Unit.RANGE] += (sbyte)(k * Range);
+            unit.UpgradeBonuses[Unit.ARMOR] += (sbyte)(k * Armor);
+            unit.UpgradeBonuses[Unit.ATTACK] += (sbyte)(k * Attack);
+            unit.UpgradeBonuses[Unit.PERMOVE] = k == 1 ? (sbyte)(unit.StaminaPerMove - (unit.MaxStamina / (Math.Floor((double)unit.MaxStamina / unit.StaminaPerMove) + Mobility))) : (sbyte)0;
         }
     }
 
@@ -92,7 +91,7 @@ namespace MapDriver
     #region UnitUpgrade
 
     [Serializable]
-    public class BronzeSword : UnitUpgrade
+    public class IronSword : UnitUpgrade
     {
         public override List<Type> Researches => new List<Type> { typeof(IronProcessing) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
@@ -102,7 +101,17 @@ namespace MapDriver
     }
 
     [Serializable]
-    public class IronSword : UnitUpgrade
+    public class IronSpikes : UnitUpgrade
+    {
+        public override List<Type> Researches => new List<Type> { typeof(IronProcessing) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Archers };
+        public override byte Attack => 1;
+        public override UpgradeType Type => UpgradeType.Weapon;
+        public override int Price => 30;
+    }
+
+    [Serializable]
+    public class SteelSword : UnitUpgrade
     {
         public override List<Type> Researches => new List<Type> { typeof(IronCasting) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
@@ -112,25 +121,48 @@ namespace MapDriver
     }
 
     [Serializable]
-    public class SteelSword : UnitUpgrade
+    public class SteelSpikes : UnitUpgrade
     {
-        public override List<Type> Researches => new List<Type> { typeof(IronHardening), typeof(ImperialAge) };
+        public override List<Type> Researches => new List<Type> { typeof(IronCasting) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Archers };
+        public override byte Attack => 2;
+        public override UpgradeType Type => UpgradeType.Weapon;
+        public override int Price => 55;
+    }
+
+    [Serializable]
+    public class HardedSword : UnitUpgrade
+    {
+        public override List<Type> Researches => new List<Type> { typeof(IronHardening) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Attack => 3;
         public override UpgradeType Type => UpgradeType.Weapon;
         public override int Price => 75;
+        public override int ResearchDifficulty => 2;
+    }
+
+    [Serializable]
+    public class ChainArmor : UnitUpgrade
+    {
+        public override List<Type> Researches => new List<Type> { typeof(IronProcessing) };
+        public override List<UnitType> Group => new List<UnitType> { UnitType.Archers, UnitType.Cavalery, UnitType.Infantry };
+        public override byte Armor => 1;
+        public override byte PieceArmor => 1;
+        public override UpgradeType Type => UpgradeType.Armor;
+        public override int Price => 30;
     }
 
     [Serializable]
     public class PlateArmor : UnitUpgrade
     {
-        public override List<Type> Researches => new List<Type> { typeof(IronCasting), typeof(CastleAge) };
+        public override List<Type> Researches => new List<Type> { typeof(IronCasting) };
         public override List<UnitType> Group => new List<UnitType> { UnitType.Cavalery, UnitType.Infantry };
         public override byte Armor => 3;
         public override byte PieceArmor => 2;
         public override sbyte Mobility => -2;
         public override UpgradeType Type => UpgradeType.Armor;
         public override int Price => 80;
+        public override int ResearchDifficulty => 3;
     }
 
     #endregion

@@ -98,10 +98,11 @@ namespace MapDriver
         public void SetElevation(int x, int y, int val)
         {
             elevation[x, y] = val;
-            SetTerrain(x, y, GetTerrain(x, y));
-            SetTerrain(x - 1, y, GetTerrain(x - 1, y));
-            SetTerrain(x, y - 1, GetTerrain(x, y - 1));
-            SetTerrain(x - 1, y - 1, GetTerrain(x - 1, y - 1));
+
+            set_elev(x, y);
+            set_elev(x - 1, y);
+            set_elev(x, y - 1);
+            set_elev(x - 1, y - 1);
         }
 
         public void SetTerrain(int x, int y, Terrain t)
@@ -109,9 +110,21 @@ namespace MapDriver
             if (TryCoordinates(x, y))
             {
                 Terrain terrain = (Terrain)Activator.CreateInstance(t.GetType());
-                int[] elev = { elevation[x, y], elevation[x + 1, y], elevation[x, y + 1], elevation[x + 1, y + 1] };
-                terrain.Elevation = (double)(elev.Max() + elev.Min()) / 2;
+                set_elev(x, y);
                 this.terrain[x, y] = terrain;
+            }
+        }
+
+        private void set_elev(int x, int y)
+        {
+            if (TryCoordinates(x, y))
+            {
+                Terrain terrain = GetTerrain(x, y);
+                if (terrain != null)
+                {
+                    int[] elev = { elevation[x, y], elevation[x + 1, y], elevation[x, y + 1], elevation[x + 1, y + 1] };
+                    terrain.Elevation = (double)(elev.Max() + elev.Min()) / 2;
+                }
             }
         }
 

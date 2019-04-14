@@ -42,7 +42,7 @@ namespace MapDriver
         public Dictionary<UpgradeType, UnitUpgrade> Upgrades { get; } = new Dictionary<UpgradeType, UnitUpgrade>();
         public UnitStatus UnitStatus { get; set; } = UnitStatus.InBarracks;
         public int Rounds { get; set; } = 0;
-        public byte[] UpgradeBonuses = new byte[5];
+        public sbyte[] UpgradeBonuses = new sbyte[5];
 
         public byte Player { get; private set; }
         public virtual byte Direction { get; set; } = 4;
